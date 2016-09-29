@@ -15,8 +15,56 @@ constexpr size_t LINESIZE = 1024;
 // Cant say it's not descriptive
 void create_str_table_for_file(FILE *pipe, char *filename);
 
+
+// Chomp the last character from a buffer if it is delim.
+void chomp (char* string, char delim) {
+   size_t len = strlen (string);
+   if (len == 0) return;
+   char* nlpos = string + len - 1;
+   if (*nlpos == delim) *nlpos = '\0';
+}
+
+void create_str_table_for_file(FILE *pipe, char *filename)
+{
+	int linenr = 1;
+	for (;;) {
+      char buffer[LINESIZE];
+      char* fgets_rc = fgets (buffer, LINESIZE, pipe);
+      if (fgets_rc == NULL) break;
+      chomp (buffer, '\n');
+      printf ("%s:line %d: [%s]\n", filename, linenr, buffer);
+
+      // http://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+      int sscanf_rc = sscanf (buffer, "# %d \"%[^\"]\"",
+                              &linenr, filename);
+      if (sscanf_rc == 2) {
+         printf ("DIRECTIVE: line %d file \"%s\"\n", linenr, filename);
+         continue;
+      }
+
+      char* savepos = NULL;
+      char* bufptr = buffer;
+      for (int tokenct = 1;; ++tokenct) {
+         char* token = strtok_r (bufptr, " \t\n", &savepos);
+         bufptr = NULL;
+         if (token == NULL) break;
+         const string* str = string_set::intern (token);
+         printf ("intern (\"%s\") returned %p->\"%s\"\n",
+              filename, str, str->c_str());
+         //printf ("token %d.%d: [%s]\n",
+         //        linenr, tokenct, token);
+         // Dont know if we will need this?
+      }
+      ++linenr;
+   }
+
+   // TODO dump to open FILE* on filename
+   string_set::dump (stdout);
+}
+
 int main(int argc, char *argv[])
 {
+	// A bunch of options that we dont actually use rn
 	int option = 0;
 	int yydebug = 0;
 	int yy_flex_debug = 0;
@@ -53,41 +101,37 @@ int main(int argc, char *argv[])
 	// it is incremented by the getopt internals for each successful argument
 	// parsed.  After getopt returns -1 you are guaranteed that the first
 	// non-option index in argv will be located at optind
-	for (int i = optind; i < argc; i++)
+	string filename = string(argv[optind]);
+
+	// basename, also sick AF. Returns the name of the file without
+	// an absolute path prepended or extensions. 
+	const char *execname = basename(argv[optind]);
+		
+	if (filename.size() <= 0)
 	{
-		// basename, also sick AF. Returns the name of the file without
-		// an absolute path prepended or extensions. 
-		const char *execname = basename(argv[optind]);
-		string filename = string(argv[optind]);
-		if (filename.size() <= 0)
-		{
-			fprintf(stderr, "ERROR Please enter a file name!\n");
-			exit(EXIT_FAILURE);
-		}
-
-		if (filename.substr(filename.length() - 3, 3) != ".oc")
-		{
-			fprintf(stderr, "ERROR Please enter a valid .oc file!\n");
-			exit(EXIT_FAILURE);
-		}
-
-		string command = CPP + " " + filename;
-		FILE *pipe = popen(command.c_str(), "r");
-		if (pipe == NULL)
-		{
-			fprintf(stderr, "%s: %s: %s\n", execname, command.c_str(), strerror (errno));
-			exit_status = EXIT_FAILURE;
-		}
-
-		create_str_table_for_file(pipe, (char *)filename.c_str());
-		int pclose_rv = pclose(pipe);
-		if (pclose_rv != 0) exit_status = EXIT_FAILURE;
+		fprintf(stderr, "ERROR Please enter a file name!\n");
+		exit(EXIT_FAILURE);
 	}
+
+	if (filename.substr(filename.length() - 3, 3) != ".oc")
+	{
+		fprintf(stderr, "ERROR Please enter a valid .oc file!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	string command = CPP + " " + filename;
+	printf("cmd: %s\n", command.c_str());
+	FILE *pipe = popen(command.c_str(), "r");
+	if (pipe == NULL)
+	{
+		fprintf(stderr, "%s: %s: %s\n", execname, command.c_str(), strerror (errno));
+		exit_status = EXIT_FAILURE;
+	}
+
+	create_str_table_for_file(pipe, (char *)filename.c_str());
+	int pclose_rv = pclose(pipe);
+	if (pclose_rv != 0) exit_status = EXIT_FAILURE;
 
 	return exit_status;
 }
 
-void create_str_table_for_file(FILE *pipe, char *filename)
-{
-	// Function available soon!
-}
