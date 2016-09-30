@@ -32,13 +32,13 @@ void create_str_table_for_file(FILE *pipe, char *filename)
       char* fgets_rc = fgets (buffer, LINESIZE, pipe);
       if (fgets_rc == NULL) break;
       chomp (buffer, '\n');
-      printf ("%s:line %d: [%s]\n", filename, linenr, buffer);
+      //printf ("%s:line %d: [%s]\n", filename, linenr, buffer);
 
       // http://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
       int sscanf_rc = sscanf (buffer, "# %d \"%[^\"]\"",
                               &linenr, filename);
       if (sscanf_rc == 2) {
-         printf ("DIRECTIVE: line %d file \"%s\"\n", linenr, filename);
+         //printf ("DIRECTIVE: line %d file \"%s\"\n", linenr, filename);
          continue;
       }
 
@@ -48,18 +48,17 @@ void create_str_table_for_file(FILE *pipe, char *filename)
          char* token = strtok_r (bufptr, " \t\n", &savepos);
          bufptr = NULL;
          if (token == NULL) break;
-         const string* str = string_set::intern (token);
-         printf ("intern (\"%s\") returned %p->\"%s\"\n",
-              filename, str, str->c_str());
-         //printf ("token %d.%d: [%s]\n",
-         //        linenr, tokenct, token);
-         // Dont know if we will need this?
+         string_set::intern (token);
       }
       ++linenr;
    }
 
-   // TODO dump to open FILE* on filename
-   string_set::dump (stdout);
+   string bname = string(basename(filename));
+   string ofile = bname.substr(0, bname.find_last_of(".")) + ".str";
+   FILE *fp = fopen(ofile.c_str(), "w");
+   string_set::dump (fp);
+
+   fclose(fp);
 }
 
 int main(int argc, char *argv[])
@@ -69,11 +68,12 @@ int main(int argc, char *argv[])
 	int yydebug = 0;
 	int yy_flex_debug = 0;
 	int debug = 0;
-	int mycppopt = 0;
+	int cppopt = 0;
 	string cpparg = "";
+    string debugarg = "";
 
 	// Spec said use getopt, which turns out to be sick AF
-	while ((option = getopt(argc, argv, "ly@D:")) != -1)
+	while ((option = getopt(argc, argv, "ly@:D:")) != -1)
 	{
 		switch(option)
 		{
@@ -85,15 +85,22 @@ int main(int argc, char *argv[])
 				break;
 			case '@':
 				debug = 1;
+                debugarg = string(optarg);
 				break;
 			case 'D':
-				mycppopt = 1;
+				cppopt = 1;
 				cpparg = string(optarg);
 				break;
 			default:
 				exit(EXIT_FAILURE);
 		}
 	}
+
+    if (yydebug || yy_flex_debug || debug || cppopt)
+    {
+        // Flag handling code here, not applicable atm
+    }
+
 
 	int exit_status = EXIT_SUCCESS;
 
@@ -120,7 +127,7 @@ int main(int argc, char *argv[])
 	}
 
 	string command = CPP + " " + filename;
-	printf("cmd: %s\n", command.c_str());
+	//printf("cmd: %s\n", command.c_str());
 	FILE *pipe = popen(command.c_str(), "r");
 	if (pipe == NULL)
 	{
@@ -130,8 +137,8 @@ int main(int argc, char *argv[])
 
 	create_str_table_for_file(pipe, (char *)filename.c_str());
 	int pclose_rv = pclose(pipe);
-	if (pclose_rv != 0) exit_status = EXIT_FAILURE;
+	if (pclose_rv != 0) {exit_status = EXIT_FAILURE;}
 
-	return exit_status;
+    exit(exit_status);
 }
 
