@@ -5,7 +5,7 @@ MKDEP    = g++ -std=gnu++14 -MM
 
 MKFILE   = Makefile
 DEPFILE  = Makefile.dep
-SOURCES  = string_set.cpp program1.cpp
+SOURCES  = string_set.cpp p1.cpp
 HEADERS  = string_set.h
 OBJECTS  = ${SOURCES:.cpp=.o}
 EXECBIN  = oc

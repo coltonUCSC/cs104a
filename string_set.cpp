@@ -32,7 +32,7 @@ void string_set::dump (FILE* out) {
          need_index = false;
          const string* str = &*itor;
          fprintf (out, "%22zu %p->\"%s\"\n", hash_fn(*str),
-                  str, str->c_str());
+                 str, str->c_str());
       }
    }
    fprintf (out, "load_factor = %.3f\n", set.load_factor());

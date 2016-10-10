@@ -10,9 +10,7 @@ using namespace std;
 const string CPP = "/usr/bin/cpp";
 constexpr size_t LINESIZE = 1024;
 
-// TODO use shittier comments
-
-// Cant say it's not descriptive
+// function prototypes
 void create_str_table_for_file(FILE *pipe, char *filename);
 
 
@@ -27,43 +25,46 @@ void chomp (char* string, char delim) {
 void create_str_table_for_file(FILE *pipe, char *filename)
 {
 	int linenr = 1;
-	for (;;) {
-      char buffer[LINESIZE];
-      char* fgets_rc = fgets (buffer, LINESIZE, pipe);
-      if (fgets_rc == NULL) break;
-      chomp (buffer, '\n');
-      //printf ("%s:line %d: [%s]\n", filename, linenr, buffer);
+    struct string_set ss;
 
-      // http://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
-      int sscanf_rc = sscanf (buffer, "# %d \"%[^\"]\"",
-                              &linenr, filename);
-      if (sscanf_rc == 2) {
-         //printf ("DIRECTIVE: line %d file \"%s\"\n", linenr, filename);
-         continue;
-      }
+	for (;;)
+	{
+		char buffer[LINESIZE];
+		char *fgets_rc = fgets(buffer, LINESIZE, pipe);
+		if (fgets_rc == NULL) break;
+		chomp(buffer, '\n');
 
-      char* savepos = NULL;
-      char* bufptr = buffer;
-      for (int tokenct = 1;; ++tokenct) {
-         char* token = strtok_r (bufptr, " \t\n", &savepos);
-         bufptr = NULL;
-         if (token == NULL) break;
-         string_set::intern (token);
-      }
-      ++linenr;
-   }
+		int sscanf_rc = sscanf(buffer, "# %d \"%[^\"]\"",
+							   &linenr, filename);
+		if (sscanf_rc == 2)
+		{
+			continue;
+		}
 
-   string bname = string(basename(filename));
-   string ofile = bname.substr(0, bname.find_last_of(".")) + ".str";
-   FILE *fp = fopen(ofile.c_str(), "w");
-   string_set::dump (fp);
+		char *savepos = NULL;
+		char *bufptr = buffer;
+		for (int tokenct = 1;; ++tokenct)
+		{
+			char *token = strtok_r(bufptr, " \t\n", &savepos);
+			bufptr = NULL;
+			if (token == NULL) break;
+            ss.intern(token);
+		}
+		++linenr;
+	}
 
-   fclose(fp);
+	string bname = string(basename(filename));
+	string ofile = bname.substr(0,
+                                bname.find_last_of(".")) + ".str";
+	FILE *fp = fopen(ofile.c_str(), "w");
+    ss.dump(fp);
+
+	fclose(fp);
 }
 
 int main(int argc, char *argv[])
 {
-	// A bunch of options that we dont actually use rn
+	// A bunch of options that we dont actually use at the moment
 	int option = 0;
 	int yydebug = 0;
 	int yy_flex_debug = 0;
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
 	string cpparg = "";
     string debugarg = "";
 
-	// Spec said use getopt, which turns out to be sick AF
+	// Parse command line options with getopt
 	while ((option = getopt(argc, argv, "ly@:D:")) != -1)
 	{
 		switch(option)
@@ -89,29 +90,32 @@ int main(int argc, char *argv[])
 				break;
 			case 'D':
 				cppopt = 1;
-				cpparg = string(optarg);
+                // Did not know if he was gonna pass it as
+                // ./oc -D __OCLIB_OH__ program.oc
+                // or as ./oc -D -D__OCLIB_OH__ program.oc
+                // so just handle both cases to be safe
+                cpparg = ((string(optarg).substr(0, 2) == "-D") ?
+                          string(optarg) + " " :
+                          "-D" + string(optarg) + " ");
 				break;
 			default:
 				exit(EXIT_FAILURE);
 		}
 	}
 
+    printf("cpparg: %s\n", cpparg.c_str());
+
     if (yydebug || yy_flex_debug || debug || cppopt)
     {
         // Flag handling code here, not applicable atm
     }
 
-
 	int exit_status = EXIT_SUCCESS;
 
-	// optind is global extern brought in by the header containing getopt.
-	// it is incremented by the getopt internals for each successful argument
-	// parsed.  After getopt returns -1 you are guaranteed that the first
-	// non-option index in argv will be located at optind
+	// optind contains the index of the first non-argument element
 	string filename = string(argv[optind]);
 
-	// basename, also sick AF. Returns the name of the file without
-	// an absolute path prepended or extensions. 
+	// strip any leading path using basename
 	const char *execname = basename(argv[optind]);
 		
 	if (filename.size() <= 0)
@@ -126,12 +130,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	string command = CPP + " " + filename;
-	//printf("cmd: %s\n", command.c_str());
+    // Run input through C preprocessor then parse the output
+	string command = CPP + " " + cpparg + " " + filename;
 	FILE *pipe = popen(command.c_str(), "r");
 	if (pipe == NULL)
 	{
-		fprintf(stderr, "%s: %s: %s\n", execname, command.c_str(), strerror (errno));
+		fprintf(stderr, "%s: %s: %s\n", execname, command.c_str(),
+                strerror (errno));
 		exit_status = EXIT_FAILURE;
 	}
 
