@@ -103,11 +103,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-    printf("cpparg: %s\n", cpparg.c_str());
-
     if (yydebug || yy_flex_debug || debug || cppopt)
     {
         // Flag handling code here, not applicable atm
+        // Check them to make compiler happy
     }
 
 	int exit_status = EXIT_SUCCESS;
