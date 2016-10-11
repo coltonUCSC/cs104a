@@ -36,17 +36,21 @@ void create_str_table_for_file(FILE *pipe, char *filename)
     for (;;)
     {
         char buffer[LINESIZE];
+        char scanbuf[LINESIZE];
         char *fgets_rc = fgets(buffer, LINESIZE, pipe);
         if (fgets_rc == NULL) break;
         chomp(buffer, '\n');
 
         int sscanf_rc = sscanf(buffer, "# %d \"%[^\"]\"",
-                               &linenr, filename);
+                               &linenr, scanbuf);
+
+        // Ignore preprocessor directives
         if (sscanf_rc == 2)
         {
             continue;
         }
 
+        // Insert token into the string set
         char *savepos = NULL;
         char *bufptr = buffer;
         for (int tokenct = 1;; ++tokenct)
