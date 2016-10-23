@@ -1,0 +1,8 @@
+#!/bin/sh
+# $Id: mk,v 1.6 2016-05-11 15:03:40-07 - - $
+cid + $0 *.oh *.c *.oc
+cpp -D__OCLIB_C__ oclib.oh >/tmp/cpp-oclib.oh-Cversion
+cpp  oclib.oh >/tmp/cpp-oclib.oh-OCversion
+killps ghostview gs gv
+mkpspdf Listing-oclib.ps oclib.oh i\
+        /tmp/cpp-oclib.oh-Cversion /tmp/cpp-oclib.oh-OCversion oclib.c
