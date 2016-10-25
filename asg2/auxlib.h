@@ -1,3 +1,9 @@
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
+
 #ifndef __AUXLIB_H__
 #define __AUXLIB_H__
 

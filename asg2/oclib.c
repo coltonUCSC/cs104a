@@ -1,4 +1,8 @@
-// $Id: oclib.c,v 1.50 2015-05-20 19:57:55-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #include <assert.h>
 #include <ctype.h>

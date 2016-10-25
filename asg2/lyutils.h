@@ -1,4 +1,8 @@
-// $Id: lyutils.h,v 1.10 2016-10-06 16:42:53-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #ifndef __UTILS_H__
 #define __UTILS_H__

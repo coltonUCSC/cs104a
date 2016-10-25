@@ -41,43 +41,35 @@ STRING (\"([^\\"\n]|\\[\\'"0nt])*\")
 "void"         { return yylval_token (TOK_VOID);   }
 "while"        { return yylval_token (TOK_WHILE);  }
 
-"!="			{ return yylval_token (TOK_NE); }
-"!"				{ return yylval_token ('!');  	}
-"%"				{ return yylval_token ('%'); 	} 
-"("				{ return yylval_token ('(');   	}
-")"				{ return yylval_token (')');   	} 
-"*"				{ return yylval_token ('*');	} 
-"+"				{ return yylval_token ('+');	} 
-","				{ return yylval_token (',');	} 
-"-"				{ return yylval_token ('-');	} 
-"."				{ return yylval_token ('.');	} 
-"/"				{ return yylval_token ('/');	} 
-";"				{ return yylval_token (';');	} 
-"<="			{ return yylval_token (TOK_LE);	}
-"<"				{ return yylval_token (TOK_LT);	} 
-"=="			{ return yylval_token (TOK_EQ);	}
-"="				{ return yylval_token ('=');	} 
-">="			{ return yylval_token (TOK_GE);	}
-">"				{ return yylval_token (TOK_GT);	} 
-"["				{ return yylval_token ('[');	} 
-"[]"			{ return yylval_token (TOK_ARRAY);}
-"]"				{ return yylval_token (']');	} 
-"{"				{ return yylval_token ('{');	} 
-"}"				{ return yylval_token ('}');	}
+"!="            { return yylval_token (TOK_NE); }
+"!"             { return yylval_token ('!');    }
+"%"             { return yylval_token ('%');    } 
+"("             { return yylval_token ('(');    }
+")"             { return yylval_token (')');    } 
+"*"             { return yylval_token ('*');    } 
+"+"             { return yylval_token ('+');    } 
+","             { return yylval_token (',');    } 
+"-"             { return yylval_token ('-');    } 
+"."             { return yylval_token ('.');    } 
+"/"             { return yylval_token ('/');    } 
+";"             { return yylval_token (';');    } 
+"<="            { return yylval_token (TOK_LE); }
+"<"             { return yylval_token (TOK_LT); } 
+"="             { return yylval_token ('=');    } 
+"=="            { return yylval_token (TOK_EQ); }
+">="            { return yylval_token (TOK_GE); }
+">"             { return yylval_token (TOK_GT); } 
+"["             { return yylval_token ('[');    } 
+"[]"            { return yylval_token (TOK_ARRAY);}
+"]"             { return yylval_token (']');    } 
+"{"             { return yylval_token ('{');    } 
+"}"             { return yylval_token ('}');    }
+"^"             { return yylval_token ('^'); }
 
 {NUMBER}        { return yylval_token (TOK_INTCON); }
 {IDENT}         { return yylval_token (TOK_IDENT); }
-{CHAR}			{ return yylval_token (TOK_CHARCON); }
+{CHAR}          { return yylval_token (TOK_CHARCON); }
 {STRING}        { return yylval_token (TOK_STRINGCON); }
-"="             { return yylval_token ('='); }
-"+"             { return yylval_token ('+'); }
-"-"             { return yylval_token ('-'); }
-"*"             { return yylval_token ('*'); }
-"/"             { return yylval_token ('/'); }
-"^"             { return yylval_token ('^'); }
-"("             { return yylval_token ('('); }
-")"             { return yylval_token (')'); }
-";"             { return yylval_token (';'); }
 
 .               { lexer::badchar (*yytext); }
 

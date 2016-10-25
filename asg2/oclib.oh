@@ -1,4 +1,8 @@
-// $Id: oclib.oh,v 1.31 2016-09-21 17:31:28-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #ifndef __OCLIB_OH__
 #define __OCLIB_OH__

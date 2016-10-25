@@ -1,4 +1,8 @@
-// $Id: lyutils.cpp,v 1.11 2016-10-06 16:42:53-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #include <assert.h>
 #include <ctype.h>
@@ -24,7 +28,8 @@ void set_tokout(string filename) {
 void write_token(astree *token) {
    fprintf (tokout, "\t%lu %5lu.%03lu  %3d  %-15s (%s)\n", 
       token->lloc.filenr, token->lloc.linenr, 
-      token->lloc.offset, token->symbol, parser::get_yytname(token->symbol),
+      token->lloc.offset, token->symbol, 
+      parser::get_yytname(token->symbol),
       token->lexinfo->c_str());
 }
 
@@ -38,13 +43,8 @@ void lexer::newfilename (const string& filename) {
 }
 
 void lexer::advance() {
-   // if (not interactive) {
    if (lexer::lloc.offset == 0) {
-   // printf (";%2zd.%3zd: ",
-   //         lexer::lloc.filenr, lexer::lloc.linenr);
    }
-   // printf ("%s", yytext);
-   // }
    lexer::lloc.offset += last_yyleng;
    last_yyleng = yyleng;
 }
@@ -85,14 +85,8 @@ void lexer::include() {
 }
 
 int yylval_token (int symbol) {
-   // const string *file = lexer::filename(lexer::lloc.filenr);
    yylval = new astree (symbol, lexer::lloc, yytext);
    write_token(yylval);
-   // printf("line[%d]: %s\n", lexer::lloc.linenr, yytext);
-   // printf ("%lu %5lu.%03lu  %3d  %-15s (%s)\n", 
-   //            lexer::lloc.filenr, lexer::lloc.linenr, 
-   //            lexer::lloc.offset, symbol, parser::get_yytname(symbol),
-   //             (char *) yytext);
    return symbol;
 }
 

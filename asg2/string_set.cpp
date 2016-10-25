@@ -1,4 +1,8 @@
-// $Id: string_set.cpp,v 1.4 2016-09-21 16:56:20-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #include <string>
 #include <unordered_set>

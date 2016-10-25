@@ -1,4 +1,8 @@
-// $Id: string_set.h,v 1.2 2016-08-18 15:13:48-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #ifndef __STRING_SET__
 #define __STRING_SET__

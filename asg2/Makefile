@@ -1,11 +1,16 @@
-# $Id: Makefile,v 1.4 2016-09-21 16:56:20-07 - - $
+# Colton Willey
+# cwwilley@ucsc.edu
+# 
+# Jacob Janowski
+# jnjanows@ucsc.edu
 
 GPP      = g++ -std=gnu++14 -g -O0 -Wall -Wextra
 MKDEP    = g++ -std=gnu++14 -MM
 
 MKFILE   = Makefile
 DEPFILE  = Makefile.dep
-SOURCES  = string_set.cpp main.cpp lyutils.cpp auxlib.cpp yyparse.cpp yylex.cpp astree.cpp
+SOURCES  = string_set.cpp main.cpp lyutils.cpp auxlib.cpp yylex.cpp \
+yyparse.cpp astree.cpp
 HEADERS  = string_set.h lyutils.h yyparse.h
 OBJECTS  = ${SOURCES:.cpp=.o} 
 EXECBIN  = oc
@@ -23,7 +28,6 @@ all : ${GEN} ${EXECBIN}
 
 ${CLGEN} : ${LSOURCES}
 	flex --outfile=${CLGEN} ${LSOURCES} 2>${LREPORT}
-	- grep -v ’ˆ ’ ${LREPORT}
 
 ${CYGEN} ${HYGEN} : ${YSOURCES}
 	bison --defines=${HYGEN} --output=${CYGEN} ${YSOURCES}
@@ -41,7 +45,8 @@ clean :
 	-rm ${OBJECTS} ${DEPFILE}
 
 spotless : clean
-	- rm ${EXECBIN} Listing.ps Listing.pdf test.out
+	- rm ${EXECBIN} ${CYGEN} ${CLGEN} Listing*.ps Listing*.pdf \
+	test.out HEADER* *.output list
 
 #${DEPFILE} :
 #	${MKDEP} ${SOURCES} >${DEPFILE}

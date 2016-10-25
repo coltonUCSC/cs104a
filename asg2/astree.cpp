@@ -1,4 +1,8 @@
-// $Id: astree.cpp,v 1.8 2016-09-21 17:13:03-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #include <assert.h>
 #include <inttypes.h>

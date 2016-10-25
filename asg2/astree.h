@@ -1,4 +1,8 @@
-// $Id: astree.h,v 1.7 2016-10-06 16:13:39-07 - - $
+// Colton Willey
+// cwwilley@ucsc.edu
+//
+// Jacob Janowski
+// jnjanows@ucsc.edu
 
 #ifndef __ASTREE_H__
 #define __ASTREE_H__
