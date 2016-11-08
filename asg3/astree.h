@@ -31,10 +31,9 @@ struct astree {
    astree (int symbol, const location&, const char* lexinfo);
    astree ();
    ~astree();
-   // astree* adopt (astree* one, astree* two, astree* three = nullptr);
-   astree* adopt (astree* child1, astree* child2 = nullptr, astree* child3 = nullptr);
+   astree* adopt (astree* child1, astree* child2 = nullptr, 
+                                  astree* child3 = nullptr);
    astree* adopt_sym (astree* child, int symbol);
-   // astree* new_func(astree*, astree*, astree*);
    astree* sym (int);
    void dump_node (FILE*);
    void dump_tree (FILE*, int depth = 0);
@@ -42,7 +41,8 @@ struct astree {
    static void print (FILE* outfile, astree* tree, int depth = 0);
 };
 
-void destroy (astree* tree1, astree* tree2 = nullptr, astree* tree3 = nullptr);
+void destroy (astree* tree1, astree* tree2 = nullptr, 
+                             astree* tree3 = nullptr);
 astree* new_func(astree*,astree*,astree*);
 void errllocprintf (const location&, const char* format, const char*);
 
