@@ -1,8 +1,4 @@
-// Colton Willey
-// cwwilley@ucsc.edu
-//
-// Jacob Janowski
-// jnjanows@ucsc.edu
+// $Id: oclib.c,v 1.50 2015-05-20 19:57:55-07 - - $
 
 #include <assert.h>
 #include <ctype.h>
