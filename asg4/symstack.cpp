@@ -107,10 +107,14 @@ void processNode(astree* node)
 		}
 		case TOK_INT:
 		{
-			astree *left = node->children[0];
-			if (!left) break;
-			node->attr[ATTR_int] = 1; 
-			left->attr[ATTR_int] = 1;
+			node->attr[ATTR_int] = 1;
+			// INT not guaranteed to have child, could be array type
+			if (node->children.size() > 0)
+			{
+				astree *left = node->children[0];
+				if (!left) break;			 
+				left->attr[ATTR_int] = 1;
+			}
 			break;
 		}
 		case TOK_INTCON:
