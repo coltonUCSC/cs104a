@@ -8,8 +8,11 @@ using namespace std;
 vector<symbol_table*> symbol_stack;
 symbol_table struct_table;
 vector<int> blockStack; 
-
 int g_block_nr = 0;
+
+void dump_symbol_stack();
+void dump_symbol(symbol *sym);
+
 symbol::symbol(astree* node)
 {
 	filenr = node->lloc.filenr;
@@ -26,6 +29,7 @@ void init_symtables(astree* node)
 	// block stack, inheriting everything not in a more deeply nested block
 	blockStack.push_back(0);
 	symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
+	dump_symbol_stack();
 	build_symtables(node);
 }
 
@@ -84,6 +88,7 @@ void build_symtables(astree* node)
 		build_symtables(child);
 	processNode(node);
 	check_leave_block(node);
+	//dump_symbol_stack();
 }
 
 // bool lookup_symbol(astree *node)
@@ -98,7 +103,7 @@ void build_symtables(astree* node)
 
 void processNode(astree* node) 
 {
-	//printf("processNode, symbol_stack: %p node: %s \n", symbol_stack, parser::get_yytname(node->symbol));
+	//printf("processNode, symbol_stack.size: %lu node: %s \n", symbol_stack.size(), parser::get_yytname(node->symbol));
 	//node->block_nr = g_block_nr;
 	switch(node->symbol)
 	{
@@ -137,8 +142,13 @@ void processNode(astree* node)
 			left->children[0]->attr[ATTR_variable] = 1;
 			symbol *sym = new symbol(left->children[0]);
 			if (symbol_stack.back() == NULL)
-				symbol_stack.push_back(new symbol_table());
+			{
+				symbol_stack[symbol_stack.size()-1] = new symbol_table();
+				//symbol_stack.push_back(new symbol_table());
+			}
+			//printf("string val: %s\n", *(const_cast<string*>(left->children[0]->lexinfo)))
 			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
+			dump_symbol_stack();
 			break;	
 		}
 		case TOK_TYPEID:
@@ -180,6 +190,7 @@ void processNode(astree* node)
 							new symbol(node->children[i])));
 				}
 			}
+			break;
 		}
 		case TOK_BLOCK:
 		{
@@ -188,11 +199,15 @@ void processNode(astree* node)
 		case TOK_PROTOTYPE:
 		case TOK_FUNCTION:
 		{
+			//printf("TOK_FUNCTION start, symbol_stack.size: %lu\n", symbol_stack.size());
 			node->attr[ATTR_function] = 1;
 			astree *left = node->children[0];
 			symbol *sym = new symbol(node);
 			if (symbol_stack.back() == NULL)
-				symbol_stack.push_back(new symbol_table());
+			{
+				symbol_stack[symbol_stack.size()-1] = new symbol_table();
+				//symbol_stack.push_back(new symbol_table());
+			}
 			auto found = symbol_stack.back()->find(const_cast<string*>(left->children[0]->lexinfo));
 			if (found == symbol_stack.back()->end()) {
 				symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
@@ -213,7 +228,45 @@ void processNode(astree* node)
 				//???
 				//do a look up local->global 
 			}
+			dump_symbol_stack();
 			break;
 		}
 	}
+}
+
+void dump_symbol_stack()
+{
+	printf("BEGIN DUMPING symbol stack, size: %lu\n", symbol_stack.size());
+	for (int i = 0; i < symbol_stack.size(); i++)
+	{
+		printf("entry #%d\n", i);
+		
+		symbol_table *p = symbol_stack[i];
+		if (p != NULL)
+		{
+			int j = 0;
+			for (auto it = p->begin(); it != p->end(); ++it)
+			{
+				//printf("start new symbol_table entry:\n");
+				string *str = it->first;
+				symbol *s = it->second;
+				//cout << "str: " << *str << endl;
+				printf("symbol_table[%d].str: %s ", j, str->c_str());
+				dump_symbol(s);
+				j++;
+			}
+		}
+		else
+		{
+			printf("symbol_table is NULL!\n");
+		}
+	}
+	printf("END DUMP\n");
+}
+
+void dump_symbol(symbol *sym)
+{
+	printf ("(%zd.%zd.%zd) {%d}\n",
+            sym->filenr, sym->linenr, sym->offset,
+            sym->block_nr);
 }
