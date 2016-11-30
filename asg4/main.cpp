@@ -162,8 +162,11 @@ int main(int argc, char *argv[])
 
     yyparse();
     do_scan((char *)filename.c_str());
-    init_symtables(parser::root);
-    dump_parse((char *)filename.c_str()); 
+    if (parser::root != NULL)
+    {
+        init_symtables(parser::root);
+        dump_parse((char *)filename.c_str());
+    } 
     
     int pclose_rv = pclose(yyin);
     if (pclose_rv != 0) {exit_status = EXIT_FAILURE;}

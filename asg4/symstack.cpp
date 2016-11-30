@@ -25,7 +25,7 @@ void init_symtables(astree* node)
 	// this push back is crucial, a 0 sits on the bottom of the 
 	// block stack, inheriting everything not in a more deeply nested block
 	blockStack.push_back(0);
-	symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults 
+	symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
 	build_symtables(node);
 }
 
@@ -44,13 +44,13 @@ void check_enter_block(astree* node)
 	{
 		++g_block_nr;
 		blockStack.push_back(g_block_nr);
-		symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults 
+		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
 		node->block_nr = g_block_nr;
 	}
 	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		node->block_nr = 0;
-		symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults
+		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults
 	}
 	else
 	{
@@ -98,6 +98,7 @@ void build_symtables(astree* node)
 
 void processNode(astree* node) 
 {
+	//printf("processNode, symbol_stack: %p node: %s \n", symbol_stack, parser::get_yytname(node->symbol));
 	//node->block_nr = g_block_nr;
 	switch(node->symbol)
 	{
@@ -135,6 +136,8 @@ void processNode(astree* node)
 			left->children[0]->attr[ATTR_lval] = 1; 
 			left->children[0]->attr[ATTR_variable] = 1;
 			symbol *sym = new symbol(left->children[0]);
+			if (symbol_stack.back() == NULL)
+				symbol_stack.push_back(new symbol_table());
 			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
 			break;	
 		}
@@ -145,6 +148,7 @@ void processNode(astree* node)
 		}
 		case TOK_IDENT:
 		{
+			// TODO push new symbol table entry
 			break;
 		}
 		case TOK_FIELD:
@@ -187,7 +191,8 @@ void processNode(astree* node)
 			node->attr[ATTR_function] = 1;
 			astree *left = node->children[0];
 			symbol *sym = new symbol(node);
-
+			if (symbol_stack.back() == NULL)
+				symbol_stack.push_back(new symbol_table());
 			auto found = symbol_stack.back()->find(const_cast<string*>(left->children[0]->lexinfo));
 			if (found == symbol_stack.back()->end()) {
 				symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
