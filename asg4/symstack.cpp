@@ -100,6 +100,12 @@ void processNode(astree* node)
 			node->attr[ATTR_const] = 1;
 			break;
 		}
+		case TOK_VOID:
+		{
+			// TODO??
+			node->attr[ATTR_void] = 1;
+			break;
+		}
 		case TOK_VARDECL:
 		{
 			astree *left = node->children[0];

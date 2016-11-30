@@ -147,9 +147,13 @@ void print_attr(FILE *outfile, astree* node)
 }
 
 void astree::print (FILE* outfile, astree* tree, int depth) {
-   fprintf (outfile, "; %*s", depth * 3, "");
+   for (int i = 0; i < depth; ++i)
+   {
+      fprintf (outfile, "|  ");
+   }
+
    fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd) {%d} ",
-            parser::get_yytname (tree->symbol), tree->lexinfo->c_str(),
+            parser::get_yytname (tree->symbol)+4, tree->lexinfo->c_str(),
             tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset,
             tree->block_nr);
    print_attr(outfile, tree);
