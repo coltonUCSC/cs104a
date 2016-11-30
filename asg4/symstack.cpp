@@ -1,13 +1,15 @@
 #include "symstack.h"
 #include "lyutils.h"
 #include <iostream>
+#include <stack>
 using namespace std;
 
 //vector of unordered_maps<pair((single)string*, symbol*)>
 vector<symbol_table*> symbol_stack;
 symbol_table struct_table;
+vector<int> blockStack; 
 
-int g_block_nr = 1;
+int g_block_nr = 0;
 symbol::symbol(astree* node)
 {
 	filenr = node->lloc.filenr;
@@ -20,42 +22,59 @@ symbol::symbol(astree* node)
 
 void init_symtables(astree* node)
 {
-	symbol_stack.push_back(new symbol_table());
+	// this push back is crucial, a 0 sits on the bottom of the 
+	// block stack, inheriting everything not in a more deeply nested block
+	blockStack.push_back(0);
+	symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults 
 	build_symtables(node);
 }
 
+// TODO match prototype to function?
 void check_enter_block(astree* node)
 {
-	if (node->symbol == TOK_BLOCK)
+	if (node->symbol == TOK_PARAM)
+	{
+		// special case, drop the param into
+		// the next block number
+		g_block_nr++;
+		node->block_nr = g_block_nr;
+		blockStack.push_back(g_block_nr);
+	}
+	else if (node->symbol == TOK_BLOCK)
 	{
 		++g_block_nr;
-		symbol_stack.push_back(new symbol_table());
+		blockStack.push_back(g_block_nr);
+		symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults 
 		node->block_nr = g_block_nr;
 	}
-	else if ((node->symbol == TOK_FUNCTION)
-		|| (node->symbol == TOK_PROTOTYPE))
+	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
-		++g_block_nr;
-		symbol_stack.push_back(new symbol_table());
-
-		node->block_nr = g_block_nr;
-
-		++g_block_nr;
-		symbol_stack.push_back(new symbol_table());
+		node->block_nr = 0;
+		symbol_stack.push_back(new symbol_table());// TODO change to NULL then fix segfaults
 	}
 	else
 	{
-		node->block_nr = g_block_nr;
+		node->block_nr = blockStack.back();
 	}
 }
 
 void check_leave_block(astree *node)
 {
-	if ((node->symbol == TOK_BLOCK) || (node->symbol == TOK_FUNCTION)
-		|| (node->symbol == TOK_PROTOTYPE))
+	if (node->symbol == TOK_PARAM)
+	{
+		// special case, restore block number
+		blockStack.pop_back();
+		--g_block_nr;
+	}
+	else if(node->symbol == TOK_BLOCK)
+	{
+		blockStack.pop_back();
+		symbol_stack.pop_back();
+	}
+	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		symbol_stack.pop_back();
-	}	
+	}
 }
 
 void build_symtables(astree* node) 
