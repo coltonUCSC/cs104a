@@ -165,6 +165,11 @@ bool set_type_attr(astree *node)
 		node->attr[ATTR_string]= 1;
 		return true;
 	}
+	else if ((*(node->lexinfo)) == string("[]"))
+	{
+		node->attr[ATTR_array]= 1;
+		return true;
+	}
 
 	symbol *sym = lookup_struct(node);
 	if (sym != NULL)
@@ -194,10 +199,14 @@ void write_symbol(astree *node)
 		{
 			if (child->symbol == TOK_FIELD)
 			{
+				int name = 0;
+				if (child->attr[ATTR_array] == true)
+					name = 1;
+
 				string temp = write_attr(child);
-				printf("   %s (%zd.%zd.%zd) field {%s} %s", (child->children[0]->lexinfo)->c_str(), 
-							 child->children[0]->lloc.filenr, child->children[0]->lloc.linenr,
-							 child->children[0]->lloc.offset, (node->children[0]->lexinfo)->c_str(), 
+				printf("   %s (%zd.%zd.%zd) field {%s} %s", (child->children[name]->lexinfo)->c_str(), 
+							 child->children[name]->lloc.filenr, child->children[name]->lloc.linenr,
+							 child->children[name]->lloc.offset, (node->children[0]->lexinfo)->c_str(), 
 							 temp.c_str());
 				printf("\n");
 			}
@@ -206,7 +215,7 @@ void write_symbol(astree *node)
 		if (node->children.size() > 1)
 			printf("\n");
 	}
-	else if (node->symbol == TOK_FUNCTION || node->symbol == TOK_PROTOTYPE)
+	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		// paranoia line
 		string temp = write_attr(node);
@@ -216,10 +225,14 @@ void write_symbol(astree *node)
 		printf("\n");
 		for (auto child : node->children[1]->children)
 		{
+			int name = 0;
+			if (child->symbol == TOK_ARRAY)
+				name = 1;
+
 			string temp = write_attr(child->children[0]) + write_attr(child);
-			printf("   %s (%zd.%zd.%zd) {%d} %s", (child->children[0]->lexinfo)->c_str(), 
-						 child->children[0]->lloc.filenr, child->children[0]->lloc.linenr,
-						 child->children[0]->lloc.offset, child->block_nr, temp.c_str());
+			printf("   %s (%zd.%zd.%zd) {%d} %s", (child->children[name]->lexinfo)->c_str(), 
+						 child->children[name]->lloc.filenr, child->children[name]->lloc.linenr,
+						 child->children[name]->lloc.offset, child->block_nr, temp.c_str());
 			printf("\n");
 		}
 		printf("\n");
@@ -227,10 +240,16 @@ void write_symbol(astree *node)
 	else if (node->symbol == TOK_VARDECL)
 	{
 		char buff[1024];
+		int name = 0;
 		string temp = write_attr(node->children[0]) + write_attr(node->children[0]->children[0]);
-		sprintf(buff, "%s%s (%zd.%zd.%zd) {%d} %s", depth.c_str(), (node->children[0]->children[0]->lexinfo)->c_str(), 
-					 node->children[0]->children[0]->lloc.filenr, node->children[0]->children[0]->lloc.linenr,
-					 node->children[0]->children[0]->lloc.offset, node->block_nr, temp.c_str());
+		if (node->children[0]->symbol == TOK_ARRAY)
+		{
+			name = 1;
+			temp += write_attr(node->children[0]->children[name]);
+		}
+		sprintf(buff, "%s%s (%zd.%zd.%zd) {%d} %s", depth.c_str(), (node->children[0]->children[name]->lexinfo)->c_str(), 
+					 node->children[0]->children[name]->lloc.filenr, node->children[0]->children[name]->lloc.linenr,
+					 node->children[0]->children[name]->lloc.offset, node->block_nr, temp.c_str());
 		if (node->block_nr != 0)
 			function_stack.push_back(string(buff));
 		else
@@ -280,17 +299,21 @@ void processNode(astree *node)
 		}
 		case TOK_VARDECL:
 		{
-			astree *left = node->children[0];
-			left->children[0]->attr[ATTR_lval] = 1; 
-			left->children[0]->attr[ATTR_variable] = 1;
-			symbol *sym = new symbol(left->children[0]);
+			astree *a_node = node->children[0]->children[0];
+			if (node->children[0]->symbol == TOK_ARRAY)
+				a_node = node->children[0]->children[1];
+
+			a_node->attr[ATTR_lval] = 1; 
+			a_node->attr[ATTR_variable] = 1;
+
+			symbol *sym = new symbol(a_node);
 			if (symbol_stack.back() == NULL)
 			{
 				symbol_stack[symbol_stack.size()-1] = new symbol_table();
 				//symbol_stack.push_back(new symbol_table());
 			}
 			// printf("TOK_VARDECL val: %s\n", (left->children[0]->lexinfo)->c_str()); //%%: DUMP_SYMBOL
-			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
+			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(a_node->lexinfo), sym));
 
 			// if (node->childre[0]->symbol == TOK_TYPEID)
 			// dump_symbol_stack(); //%%: DUMP_SYMBOL
@@ -308,6 +331,13 @@ void processNode(astree *node)
 				node->children[0]->attr[ATTR_struct] = 1;
 			}
 			// else nothing, could be a struct
+			break;
+		}
+		case TOK_ARRAY:
+		{
+			if (!set_type_attr(node->children[0]))
+				printf("ERROR field names no type!\n");
+			node->attr[ATTR_array] = 1;
 			break;
 		}
 		case TOK_IDENT:
@@ -348,14 +378,18 @@ void processNode(astree *node)
 				sym->fields = new symbol_table;
 				for (size_t i=1; i<node->children.size(); ++i)
 				{
+					int name = 0;
 					// set type attribute
 					if (!set_type_attr(node->children[i]))
 						printf("ERROR field names no type!\n");
 
-					//insert each field into the struct symbols field hash_table
+					if (node->children[i]->attr[ATTR_array] == true)
+						name = 1;
+
 					sym->fields->insert(symbol_entry
-						(const_cast<string*>(node->children[i]->children[0]->lexinfo), 
-							new symbol(node->children[i])));
+						(const_cast<string*>(node->children[i]->children[name]->lexinfo), 
+							new symbol(node->children[i])));						
+					//insert each field into the struct symbols field hash_table
 				}
 			}
 			write_symbol(node);
@@ -404,6 +438,11 @@ void processNode(astree *node)
 			{
 				child->attr[ATTR_param] = 1;
 				child->attr[ATTR_lval] = 1;
+
+				// symbol_stack.back()->insert(symbol_entry
+				// 	(const_cast<string*>(child->children[name]->lexinfo), 
+				// 		new symbol(child->children[name])));
+
 				sym->parameters->push_back(new symbol(child));
 			}
 			// do we need to do anything with children[3] (block)
