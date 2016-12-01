@@ -48,6 +48,7 @@ struct astree {
    // astree* new_func(astree*, astree*, astree*);
    astree* sym (int);
    void dump_node (FILE*);
+   void print_node();
    void dump_tree (FILE*, int depth = 0);
    static void dump (FILE* outfile, astree* tree);
    static void print (FILE* outfile, astree* tree, int depth = 0);

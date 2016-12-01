@@ -20,9 +20,17 @@ symbol::symbol(astree* node)
 	filenr = node->lloc.filenr;
 	linenr = node->lloc.linenr;
 	offset = node->lloc.offset;
+	attr = node->attr;
 	fields = NULL;
 	parameters = NULL;
 	block_nr = g_block_nr;
+}
+
+void symbol::adopt_attr(astree* node)
+{
+	this->attr |= node->attr;
+	for (auto child : node->children)
+		this->attr |= child->attr;
 }
 
 void init_symtables(astree* node)
@@ -52,11 +60,15 @@ void check_enter_block(astree* node)
 		block_stack.push_back(g_block_nr);
 		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
 		node->block_nr = g_block_nr;
+		printf("entering block\n");
+		dump_symbol_stack();
 	}
 	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		node->block_nr = 0;
 		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults
+		printf("entering block\n");
+		dump_symbol_stack();
 	}
 	else
 	{
@@ -80,17 +92,23 @@ void check_leave_block(astree *node)
 {
 	if (node->symbol == TOK_PARAM)
 	{
+		// printf("leaving block\n");
+		// dump_symbol_stack();
 		// special case, restore block number
 		block_stack.pop_back();
 		--g_block_nr;
 	}
 	else if(node->symbol == TOK_BLOCK)
 	{
+		// printf("leaving block\n");
+		// dump_symbol_stack();
 		block_stack.pop_back();
 		symbol_stack.pop_back();
 	}
 	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
+		// printf("leaving block\n");
+		// dump_symbol_stack();
 		dump_function_stack();
 		symbol_stack.pop_back();
 	}
@@ -98,12 +116,12 @@ void check_leave_block(astree *node)
 
 void build_symtables(astree* node) 
 {
+	// printf("        "); node->print_node();
 	check_enter_block(node);
 	for (auto child : node->children)
 		build_symtables(child);
 	processNode(node);
 	check_leave_block(node);
-	// dump_symbol_stack();
 }
 	// for (auto it = symbol_stack.end(); it != symbol_stack.begin(); it--)
 	// {
@@ -261,6 +279,9 @@ void processNode(astree *node)
 {
 	//printf("processNode, symbol_stack.size: %lu node: %s \n", symbol_stack.size(), parser::get_yytname(node->symbol));
 	//node->block_nr = g_block_nr;
+	// printf("processing: ");
+	// node->print_node();
+
 	switch(node->symbol)
 	{
 		case TOK_DECLID:
@@ -307,11 +328,17 @@ void processNode(astree *node)
 			a_node->attr[ATTR_variable] = 1;
 
 			symbol *sym = new symbol(a_node);
+			sym->adopt_attr(node->children[0]);
+
 			if (symbol_stack.back() == NULL)
 			{
 				symbol_stack[symbol_stack.size()-1] = new symbol_table();
 				//symbol_stack.push_back(new symbol_table());
 			}
+			symbol *handle = lookup_symbol(a_node); 
+			if ((handle != NULL) && ((int)handle->block_nr == (int)node->block_nr)) //GET FUCKED
+				printf("trying to redeclare parameter.\n");
+
 			// printf("TOK_VARDECL val: %s\n", (left->children[0]->lexinfo)->c_str()); //%%: DUMP_SYMBOL
 			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(a_node->lexinfo), sym));
 
@@ -351,6 +378,25 @@ void processNode(astree *node)
 		{
 			node->attr[ATTR_param] = 1;
 			node->attr[ATTR_lval] = 1;
+			if (symbol_stack.back() == NULL) 
+				symbol_stack[symbol_stack.size()-1] = new symbol_table();
+			
+			symbol *a_sym;
+			for (auto child: node->children) 
+			{
+				int name = 0;
+				if (child->symbol == TOK_ARRAY)
+					name = 1;
+
+				a_sym = new symbol(child->children[name]);
+				a_sym->adopt_attr(child);
+
+				child->attr[ATTR_param] = 1;
+				child->attr[ATTR_lval] = 1;
+
+				symbol_stack.back()->insert(symbol_entry
+					(const_cast<string*>(child->children[name]->lexinfo), a_sym));
+			}
 			break;
 		}
 		case TOK_FIELD:
@@ -399,6 +445,7 @@ void processNode(astree *node)
 		{
 			break;
 		}
+
 		case TOK_PROTOTYPE:
 		case TOK_FUNCTION:
 		{
@@ -434,16 +481,16 @@ void processNode(astree *node)
 			}
 
 			// if (node->children.size() == 3) g_block_nr++;
+			// symbol *a_sym;
 			for (auto child: node->children[1]->children) 
 			{
-				child->attr[ATTR_param] = 1;
-				child->attr[ATTR_lval] = 1;
+				int name = 0;
+				if (child->symbol == TOK_ARRAY)
+					name = 1;
+				symbol *handle = lookup_symbol(child->children[name]);
+				if (handle == NULL) continue; //idk if this would happen
 
-				// symbol_stack.back()->insert(symbol_entry
-				// 	(const_cast<string*>(child->children[name]->lexinfo), 
-				// 		new symbol(child->children[name])));
-
-				sym->parameters->push_back(new symbol(child));
+				sym->parameters->push_back(handle);
 			}
 			// do we need to do anything with children[3] (block)
 			// dump_symbol_stack(); //%%: DUMP_SYMBOL
@@ -459,6 +506,36 @@ void processNode(astree *node)
 			break;
 		}
 	}
+}
+
+string write_attr(symbol* node)
+{
+   string buffer = "";
+   for (int i=0; i<ATTR_bitset_size; ++i)
+   {
+      if (node->attr[i] == 1) 
+      {
+         switch(i) 
+         {
+            case ATTR_void: buffer += "void "; break; 
+            case ATTR_int: buffer += "int "; break; 
+            case ATTR_null: buffer += "null "; break; 
+            case ATTR_string: buffer += "string "; break;
+            case ATTR_struct: buffer += "struct "; break;
+            case ATTR_array: buffer += "array "; break; 
+            case ATTR_function: buffer += "function "; break; 
+            case ATTR_variable: buffer += "variable "; break;
+            //case ATTR_field: buffer += "field "; break; 
+           // case ATTR_typeid: buffer += "typeid "; break;
+            case ATTR_param: buffer += "param "; break;
+            case ATTR_lval: buffer += "lval "; break; 
+            case ATTR_const: buffer += "const "; break;
+            case ATTR_vreg: buffer += "vreg "; break; 
+            case ATTR_vaddr: buffer += "vaddr "; break;
+         }
+      }
+   }
+   return buffer;
 }
 
 void dump_symbol_stack()
@@ -477,8 +554,10 @@ void dump_symbol_stack()
 				//printf("start new symbol_table entry:\n");
 				string *str = it->first;
 				symbol *s = it->second;
+				string attr_string = write_attr(s);
 				//cout << "str: " << *str << endl;
-				printf("    symbol_table[%d].str: %s ", j, str->c_str());
+				printf("    symbol_table[%d].str: %s attr: %s", 
+					j, str->c_str(), attr_string.c_str());
 				dump_symbol(s);
 				j++;
 			}

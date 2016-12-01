@@ -6,6 +6,10 @@ struct stack {
 
 void insertion_sort (int size, string[] arr, int foo) {
    int sorted = 1;
+   int fuck = 3;
+   int test = 4;
+   fuck = 2 + test;
+   size = foo + sorted;
 }
 
 stack[] a = null;

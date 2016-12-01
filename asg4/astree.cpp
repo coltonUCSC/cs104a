@@ -97,6 +97,15 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
    return adopt (child);
 }
 
+void astree::print_node()
+{
+   string attrs = write_attr(this);
+   printf("%s \"%s\" (%zd.%zd.%zd) {%d} %s\n",
+            parser::get_yytname (this->symbol)+4, this->lexinfo->c_str(),
+            this->lloc.filenr, this->lloc.linenr, this->lloc.offset,
+            this->block_nr, attrs.c_str());
+}
+
 void astree::dump_node (FILE* outfile) {
    fprintf (outfile, "%p->{%s %zd.%zd.%zd \"%s\":",
             this, parser::get_yytname (symbol),

@@ -11,7 +11,7 @@ using symbol_table = unordered_map<string*,symbol*>;
 using symbol_entry = symbol_table::value_type;
 
 struct symbol {
-	attr_bitset attributes;
+	attr_bitset attr;
 	symbol_table* fields;
 	size_t filenr;
 	size_t linenr;
@@ -19,6 +19,7 @@ struct symbol {
 	size_t block_nr;
 	vector<symbol*>* parameters;
 	symbol(astree*);
+	void adopt_attr(astree*);
 };
 
 void init_symtables(astree* node);
