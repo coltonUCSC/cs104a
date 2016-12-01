@@ -139,8 +139,8 @@ string write_attr(astree* node)
             case ATTR_array: buffer += "array "; break; 
             case ATTR_function: buffer += "function "; break; 
             case ATTR_variable: buffer += "variable "; break;
-            case ATTR_field: buffer += "field "; break; 
-            case ATTR_typeid: buffer += "typeid "; break;
+            //case ATTR_field: buffer += "field "; break; 
+           // case ATTR_typeid: buffer += "typeid "; break;
             case ATTR_param: buffer += "param "; break;
             case ATTR_lval: buffer += "lval "; break; 
             case ATTR_const: buffer += "const "; break;

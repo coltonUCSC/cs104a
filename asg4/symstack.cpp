@@ -138,6 +138,41 @@ symbol* lookup_symbol(astree *node)
 	return NULL;
 }
 
+// Parse lexinfo for type, if found assign appropriately
+bool set_type_attr(astree *node)
+{
+	if ((*(node->lexinfo)) == string("int"))
+	{
+		node->attr[ATTR_int]= 1;
+		return true;
+	}
+	else if ((*(node->lexinfo)) == string("void"))
+	{
+		node->attr[ATTR_void]= 1;
+		return true;
+	}
+	else if ((*(node->lexinfo)) == string("null"))
+	{
+		node->attr[ATTR_null]= 1;
+		return true;
+	}
+	else if ((*(node->lexinfo)) == string("string"))
+	{
+		node->attr[ATTR_string]= 1;
+		return true;
+	}
+
+	symbol *sym = lookup_struct(node);
+	if (sym != NULL)
+	{
+		node->attr[ATTR_struct] = 1;
+		node->struct_name = (*(node->lexinfo));
+		return true;
+	}
+
+	return false;
+}
+
 void write_symbol(astree *node)
 {
 	string depth="";
@@ -167,10 +202,11 @@ void write_symbol(astree *node)
 	}
 	else if (node->symbol == TOK_FUNCTION)
 	{
+		// paranoia line
 		string temp = write_attr(node);
 		printf("%s (%zd.%zd.%zd) {%d} %s", (node->children[0]->children[0]->lexinfo)->c_str(), 
-					 node->children[0]->lloc.filenr, node->children[0]->lloc.linenr,
-					 node->children[0]->lloc.offset, node->block_nr, temp.c_str());
+					 node->children[0]->children[0]->lloc.filenr, node->children[0]->children[0]->lloc.linenr,
+					 node->children[0]->children[0]->lloc.offset, node->block_nr, temp.c_str());
 		printf("\n");
 		for (auto child : node->children[1]->children)
 		{
@@ -219,6 +255,11 @@ void processNode(astree *node)
 			}
 			break;
 		}
+		case TOK_STRING:
+		{
+			node->attr[ATTR_string] = 1;
+			break;
+		}
 		case TOK_INTCON:
 		{
 			node->attr[ATTR_int] = 1; 
@@ -260,7 +301,7 @@ void processNode(astree *node)
 				node->children[0]->struct_name = *(node->lexinfo);
 				node->children[0]->attr[ATTR_struct] = 1;
 			}
-
+			// else nothing, could be a struct
 			break;
 		}
 		case TOK_IDENT:
@@ -302,6 +343,10 @@ void processNode(astree *node)
 				sym->fields = new symbol_table;
 				for (size_t i=1; i<node->children.size(); ++i)
 				{
+					// set type attribute
+					if (!set_type_attr(node->children[i]))
+						printf("ERROR field names no type!\n");
+
 					//insert each field into the struct symbols field hash_table
 					sym->fields->insert(symbol_entry
 						(const_cast<string*>(node->children[i]->children[0]->lexinfo), 
@@ -325,6 +370,18 @@ void processNode(astree *node)
 				break; //ERROR
 			node->attr[ATTR_function] = 1;
 			astree *left = node->children[0];
+
+			//  process return type
+			if (left->symbol == TOK_TYPEID)
+			{
+				node->attr[ATTR_struct] = 1;
+				node->struct_name = (*(left->lexinfo));
+			}
+			else
+			{
+				node->attr |= left->attr;
+			}
+
 			symbol *sym = new symbol(node);
 			if (symbol_stack.back() == NULL)
 			{
