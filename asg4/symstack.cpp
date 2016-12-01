@@ -204,7 +204,7 @@ void write_symbol(astree *node)
 		if (node->children.size() > 1)
 			printf("\n");
 	}
-	else if (node->symbol == TOK_FUNCTION)
+	else if (node->symbol == TOK_FUNCTION || node->symbol == TOK_PROTOTYPE)
 	{
 		// paranoia line
 		string temp = write_attr(node);
