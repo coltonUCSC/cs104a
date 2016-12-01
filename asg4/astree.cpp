@@ -163,6 +163,12 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
             parser::get_yytname (tree->symbol)+4, tree->lexinfo->c_str(),
             tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset,
             tree->block_nr, attrs.c_str());
+
+   if (tree->symbol == TOK_IDENT)
+   {
+      fprintf (outfile, "(%zd.%zd.%zd)", 
+         tree->lloc_decl.filenr, tree->lloc_decl.linenr, tree->lloc_decl.offset);
+   }
    fprintf(outfile, "\n");
    // TODO print node definition location for TOK_IDENT
    for (astree* child: tree->children) {

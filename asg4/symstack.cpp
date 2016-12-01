@@ -126,21 +126,23 @@ symbol* lookup_struct(astree *node)
 symbol* lookup_symbol(astree *node)
 {
 	symbol_table *p;
-	// printf("search: %s ...", node->lexinfo->c_str());
-	for (size_t i = symbol_stack.size()-1; i > 0; i--) 
+
+	// This needs to be an int because it needs to be signed
+	for (int i = symbol_stack.size()-1; i >= 0; i--) 
 	{
 		p = symbol_stack[i];
 		if (p == NULL) continue;
 		auto find = p->find(const_cast<string*>(node->lexinfo));
 		if (find != p->end())
 			return find->second;
-			// printf("found");
+			
 	}
-	// printf("\n");
+
 	return NULL;
 }
 
 // Parse lexinfo for type, if found assign appropriately
+// used on some typeid nodes
 bool set_type_attr(astree *node)
 {
 	if ((*(node->lexinfo)) == string("int"))
@@ -311,7 +313,6 @@ void processNode(astree *node)
 		case TOK_IDENT:
 		{
 			symbol *sym = lookup_symbol(node);
-			// symbol *str = lookup_struct(node);
 			if (sym != NULL) // NOT ERROR
 				node->lloc_decl = location{sym->filenr, sym->linenr, sym->offset};
 			break;
