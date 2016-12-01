@@ -21,6 +21,7 @@ astree::astree() {
    lloc = location{0,0,0};
    lexinfo = nullptr;
    block_nr = 0;
+   struct_name = "";
 }
 
 astree::astree (int symbol_, const location& lloc_, const char* info) {
@@ -28,6 +29,7 @@ astree::astree (int symbol_, const location& lloc_, const char* info) {
    lloc = lloc_;
    lexinfo = string_set::intern (info);
    block_nr = 0;
+   struct_name = "";
    // vector defaults to empty -- no children
 }
 
@@ -118,32 +120,36 @@ void astree::dump (FILE* outfile, astree* tree) {
                    else tree->dump_node (outfile);
 }
 
-void print_attr(FILE *outfile, astree* node)
+string write_attr(astree* node)
 {
+   string buffer = "";
    for (int i=0; i<ATTR_bitset_size; ++i)
    {
       if (node->attr[i] == 1) 
       {
          switch(i) 
          {
-            case ATTR_void: fprintf(outfile, "void "); break; 
-            case ATTR_int: fprintf(outfile, "int "); break; 
-            case ATTR_null: fprintf(outfile, "null "); break; 
-            case ATTR_string: fprintf(outfile, "string "); break;
-            case ATTR_struct: fprintf(outfile, "struct "); break; 
-            case ATTR_array: fprintf(outfile, "array "); break; 
-            case ATTR_function: fprintf(outfile, "function "); break; 
-            case ATTR_variable: fprintf(outfile, "variable "); break;
-            case ATTR_field: fprintf(outfile, "field "); break; 
-            case ATTR_typeid: fprintf(outfile, "typeid "); break;
-            case ATTR_param: fprintf(outfile, "param "); break;
-            case ATTR_lval: fprintf(outfile, "lval "); break; 
-            case ATTR_const: fprintf(outfile, "const "); break;
-            case ATTR_vreg: fprintf(outfile, "vreg "); break; 
-            case ATTR_vaddr: fprintf(outfile, "vaddr "); break;
+            case ATTR_void: buffer += "void "; break; 
+            case ATTR_int: buffer += "int "; break; 
+            case ATTR_null: buffer += "null "; break; 
+            case ATTR_string: buffer += "string "; break;
+            case ATTR_struct: buffer += "struct ";
+                              buffer += "\"" + node->struct_name + "\" ";
+                              break; 
+            case ATTR_array: buffer += "array "; break; 
+            case ATTR_function: buffer += "function "; break; 
+            case ATTR_variable: buffer += "variable "; break;
+            case ATTR_field: buffer += "field "; break; 
+            case ATTR_typeid: buffer += "typeid "; break;
+            case ATTR_param: buffer += "param "; break;
+            case ATTR_lval: buffer += "lval "; break; 
+            case ATTR_const: buffer += "const "; break;
+            case ATTR_vreg: buffer += "vreg "; break; 
+            case ATTR_vaddr: buffer += "vaddr "; break;
          }
       }
    }
+   return buffer;
 }
 
 void astree::print (FILE* outfile, astree* tree, int depth) {
@@ -152,11 +158,11 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
       fprintf (outfile, "|  ");
    }
 
-   fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd) {%d} ",
+   string attrs = write_attr(tree);
+   fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd) {%d} %s",
             parser::get_yytname (tree->symbol)+4, tree->lexinfo->c_str(),
             tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset,
-            tree->block_nr);
-   print_attr(outfile, tree);
+            tree->block_nr, attrs.c_str());
    fprintf(outfile, "\n");
    // TODO print node definition location for TOK_IDENT
    for (astree* child: tree->children) {

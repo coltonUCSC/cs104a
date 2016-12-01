@@ -33,6 +33,8 @@ struct astree {
    int symbol;               // token code
    int block_nr;
    location lloc;            // source location
+   location lloc_decl;
+   string struct_name;
    const string* lexinfo;    // pointer to lexical information
    vector<astree*> children; // children of this n-way node
    attr_bitset attr;
@@ -50,7 +52,7 @@ struct astree {
    static void dump (FILE* outfile, astree* tree);
    static void print (FILE* outfile, astree* tree, int depth = 0);
 };
-
+string write_attr(astree* node);
 void destroy (astree* tree1, astree* tree2 = nullptr, astree* tree3 = nullptr);
 astree* new_func(astree*,astree*,astree*);
 void errllocprintf (const location&, const char* format, const char*);
