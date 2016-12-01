@@ -70,8 +70,10 @@ void dump_function_stack()
 	{
 		printf("%s\n", function_stack[i].c_str());
 	}
+	if (function_stack.size() > 0)
+		printf("\n");
 	function_stack.clear();
-	printf("\n");
+	//printf("\n");
 }
 
 void check_leave_block(astree *node)
@@ -198,7 +200,9 @@ void write_symbol(astree *node)
 				printf("\n");
 			}
 		}
-		printf("\n");
+
+		if (node->children.size() > 1)
+			printf("\n");
 	}
 	else if (node->symbol == TOK_FUNCTION)
 	{
