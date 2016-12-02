@@ -480,8 +480,10 @@ void processNode(astree *node)
 		case TOK_PROTOTYPE:
 		case TOK_FUNCTION:
 		{
-			// printf("TOK_FUNCTION start, symbol_stack.size: %lu\n", symbol_stack.size()); //%%: DUMP_SYMBOL
+
+			//printf("TOK_FUNCTION/PROTOTYPE start, symbol_stack.size: %lu\n", symbol_stack.size()); //%%: DUMP_SYMBOL
 			symbol *look_up = lookup_symbol(node);
+			//printf("NODE: %s SYM: %d\n", parser::get_yytname(node->symbol), look_up == NULL ? 0 : 1);
 			if ((node->symbol == TOK_FUNCTION) &&
 				(look_up != NULL)) 
 				break; //ERROR
@@ -500,14 +502,16 @@ void processNode(astree *node)
 			}
 
 			symbol *sym = new symbol(node);
-			if (symbol_stack.back() == NULL)
+			if (symbol_stack.at(0) == NULL)
 			{
-				symbol_stack[symbol_stack.size()-1] = new symbol_table();
+				symbol_stack[0] = new symbol_table();
 				//symbol_stack.push_back(new symbol_table());
 			}
 			auto found = symbol_stack.back()->find(const_cast<string*>(left->children[0]->lexinfo));
 			if (found == symbol_stack.back()->end()) {
-				symbol_stack.back()->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
+				//printf("inserting symbol with lexinfo: %s\n", left->children[0]->lexinfo->c_str());
+				symbol_stack.at(0)->insert(symbol_entry(const_cast<string*>(left->children[0]->lexinfo), sym));
+				//dump_symbol_stack();
 				sym->parameters = new vector<symbol*>();
 			}
 
