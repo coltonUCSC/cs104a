@@ -79,7 +79,8 @@ param     : param ',' identdecl  { destroy($2); $$ = $1->adopt($3); }
           | '('                  { $1->sym(TOK_PARAM); $$ = $1; }
           ;
 identdecl : basetype TOK_ARRAY TOK_IDENT 
-                               { $$ = $2->adopt($1, $3->sym(TOK_DECLID)); }
+                               { $$ = $2->adopt($1, 
+                               $3->sym(TOK_DECLID));}
           | basetype TOK_IDENT { $$ = $1->adopt($2->sym(TOK_DECLID));}
           ;
 basetype  : TOK_IDENT           { $$ = $1->sym(TOK_TYPEID); }      

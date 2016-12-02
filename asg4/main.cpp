@@ -146,14 +146,12 @@ int main(int argc, char *argv[])
 
     // Run input through C preprocessor then parse the output
     string command = CPP + " " + cpparg + " " + filename;
-    // FILE *pipe = popen(command.c_str(), "r");
     string bname = string(basename(&filename[0]));
     string ofile = bname.substr(0,
                                 bname.find_last_of(".")) + ".tok";
     string symfile = bname.substr(0,
                                 bname.find_last_of(".")) + ".sym";
     set_tokout(ofile);
-    // yyin = popen(command.c_str(), "r");
     cpp_popen(filename);
     if (yyin == NULL)
     {

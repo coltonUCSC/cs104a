@@ -60,35 +60,10 @@ astree* astree::sym (int sym) {
    return this;
 }
 
-// astree* astree::adopt (astree* one, astree* two, astree* three) {
-//    this->adopt(one);
-//    this->adopt(two, three);
-// }
-
-// astree* astree::adopt (int n, ...) {
-//    va_list adopt_list;
-//    va_start (adopt_list, n);
-//    for (int i=0; i<n; ++i)
-//       this->adopt(va_arg(adopt_list, i));
-//    return this;
-// }
-
-// astree* astree::adopt (astree* child) {
-//    if (child != nullptr) children.push_back (child1);
-//    return this;
-// }
-
 astree* astree::adopt (astree* child1, astree* child2, astree* child3) {
    if (child1 != nullptr) children.push_back (child1);
    if (child2 != nullptr) children.push_back (child2);
    if (child3 != nullptr) children.push_back (child3);
-   // printf("%s  ->  %s\n", parser::get_yytname(symbol), lexinfo->c_str());
-   // if (child1) printf("\t[1]:%s  ->  %s\n", 
-   //    parser::get_yytname(child1->symbol), child1->lexinfo->c_str());
-   // if (child2) printf("\t[2]:%s  ->  %s\n", 
-   //    parser::get_yytname(child2->symbol), child2->lexinfo->c_str());
-   // if (child3) printf("\t[3]:%s  ->  %s\n", 
-   //    parser::get_yytname(child3->symbol), child3->lexinfo->c_str());
    return this;
 }
 
@@ -146,13 +121,12 @@ string write_attr(astree* node)
             case ATTR_null: buffer += "null "; break; 
             case ATTR_string: buffer += "string "; break;
             case ATTR_struct: buffer += "struct ";
-                              buffer += "\"" + node->struct_name + "\" ";
+                              buffer += "\"" + 
+                              node->struct_name + "\" ";
                               break; 
             case ATTR_array: buffer += "array "; break; 
             case ATTR_function: buffer += "function "; break; 
             case ATTR_variable: buffer += "variable "; break;
-            //case ATTR_field: buffer += "field "; break; 
-           // case ATTR_typeid: buffer += "typeid "; break;
             case ATTR_param: buffer += "param "; break;
             case ATTR_lval: buffer += "lval "; break; 
             case ATTR_const: buffer += "const "; break;
@@ -181,10 +155,11 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    if (tree->symbol == TOK_IDENT)
    {
       fprintf (outfile, "(%zd.%zd.%zd)", 
-         tree->lloc_decl.filenr, tree->lloc_decl.linenr, tree->lloc_decl.offset);
+         tree->lloc_decl.filenr, 
+         tree->lloc_decl.linenr, 
+         tree->lloc_decl.offset);
    }
    fprintf(outfile, "\n");
-   // TODO print node definition location for TOK_IDENT
    for (astree* child: tree->children) {
       astree::print (outfile, child, depth + 1);
    }
