@@ -145,8 +145,8 @@ BINOP     : expr TOK_EQ expr              { $$ = $2->adopt($1, $3); }
           | expr '=' expr                 { $$ = $2->adopt($1, $3); }
           ;
 UNOP      : '!' expr                        { $$ = $1->adopt($2); }
-          | TOK_NEG expr                    { $$ = $1->adopt($2); }
-          | TOK_POS expr                    { $$ = $1->adopt($2); }
+          | '-' expr                    { $$ = $1->adopt($2); }
+          | '+' expr                    { $$ = $1->adopt($2); }
           ; 
 allocator : TOK_NEW TOK_IDENT '(' ')'       { destroy($3, $4); 
                                               $2->sym(TOK_TYPEID);
