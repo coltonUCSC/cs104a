@@ -23,7 +23,7 @@ struct symbol {
 	void adopt_attr(astree*);
 };
 
-void init_symtables(astree* node);
+void dump_symtables(astree* node, string outfile);
 void build_symtables(astree* node);
 void processNode(astree* node);
 

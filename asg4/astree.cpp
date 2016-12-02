@@ -170,7 +170,9 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
       fprintf (outfile, "|  ");
    }
    const char *tname = parser::get_yytname(tree->symbol);
-   if(strstr (tname, "TOK_") == tname) tname +=4;
+   if(strcmp(tname, "TOK_") == 0) 
+      tname +=4;
+
    string attrs = write_attr(tree);
    fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd) {%d} %s",
             tname, tree->lexinfo->c_str(),

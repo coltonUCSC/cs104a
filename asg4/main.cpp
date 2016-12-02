@@ -150,6 +150,8 @@ int main(int argc, char *argv[])
     string bname = string(basename(&filename[0]));
     string ofile = bname.substr(0,
                                 bname.find_last_of(".")) + ".tok";
+    string symfile = bname.substr(0,
+                                bname.find_last_of(".")) + ".sym";
     set_tokout(ofile);
     // yyin = popen(command.c_str(), "r");
     cpp_popen(filename);
@@ -163,10 +165,9 @@ int main(int argc, char *argv[])
     yyparse();
     do_scan((char *)filename.c_str());
     if (parser::root != NULL)
-    {
-        init_symtables(parser::root);
-        dump_parse((char *)filename.c_str());
-    } 
+        dump_symtables(parser::root, symfile);
+
+    dump_parse((char *)filename.c_str());
     
     int pclose_rv = pclose(yyin);
     if (pclose_rv != 0) {exit_status = EXIT_FAILURE;}

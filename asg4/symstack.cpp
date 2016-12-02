@@ -10,6 +10,7 @@ symbol_table struct_table;
 vector<int> block_stack; 
 vector<string> function_stack;
 
+FILE *symout;
 int g_block_nr = 0;
 
 void dump_symbol_stack();
@@ -34,10 +35,15 @@ void symbol::adopt_attr(astree* node)
 		this->attr |= child->attr;
 }
 
-void init_symtables(astree* node)
+void dump_symtables(astree* node, string outfile)
 {
-	// this push back is crucial, a 0 sits on the bottom of the 
-	// block stack, inheriting everything not in a more deeply nested block
+	symout = fopen(outfile.c_str(), "w");
+	if (symout == NULL)
+	{
+		printf("ERROR opening file for symbol table dump!\n");
+		exit(1);
+	}
+
 	block_stack.push_back(0);
 	symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
 	// dump_symbol_stack(); //%%: DUMP_SYMBOL
@@ -61,15 +67,11 @@ void check_enter_block(astree* node)
 		block_stack.push_back(g_block_nr);
 		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults 
 		node->block_nr = g_block_nr;
-		printf("entering block\n");
-		dump_symbol_stack();
 	}
 	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		node->block_nr = 0;
 		symbol_stack.push_back(NULL);// TODO change to NULL then fix segfaults
-		printf("entering block\n");
-		dump_symbol_stack();
 	}
 	else
 	{
@@ -81,10 +83,10 @@ void dump_function_stack()
 {
 	for(size_t i=0; i<function_stack.size(); ++i)
 	{
-		printf("%s\n", function_stack[i].c_str());
+		fprintf(symout, "%s\n", function_stack[i].c_str());
 	}
 	if (function_stack.size() > 0)
-		printf("\n");
+		fprintf(symout, "\n");
 	function_stack.clear();
 	//printf("\n");
 }
@@ -210,10 +212,10 @@ void write_symbol(astree *node)
 	if (node->symbol == TOK_STRUCT)
 	{
 		string temp = write_attr(node);
-		printf("%s (%zd.%zd.%zd) {%d} %s", (node->children[0]->lexinfo)->c_str(), 
+		fprintf(symout, "%s (%zd.%zd.%zd) {%d} %s", (node->children[0]->lexinfo)->c_str(), 
 					 node->children[0]->lloc.filenr, node->children[0]->lloc.linenr,
 					 node->children[0]->lloc.offset, node->block_nr, temp.c_str());
-		printf("\n");
+		fprintf(symout, "\n");
 		for (auto child : node->children)
 		{
 			if (child->symbol == TOK_FIELD)
@@ -223,25 +225,25 @@ void write_symbol(astree *node)
 					name = 1;
 
 				string temp = write_attr(child);
-				printf("   %s (%zd.%zd.%zd) field {%s} %s", (child->children[name]->lexinfo)->c_str(), 
+				fprintf(symout, "   %s (%zd.%zd.%zd) field {%s} %s", (child->children[name]->lexinfo)->c_str(), 
 							 child->children[name]->lloc.filenr, child->children[name]->lloc.linenr,
 							 child->children[name]->lloc.offset, (node->children[0]->lexinfo)->c_str(), 
 							 temp.c_str());
-				printf("\n");
+				fprintf(symout, "\n");
 			}
 		}
 
 		if (node->children.size() > 1)
-			printf("\n");
+			fprintf(symout, "\n");
 	}
 	else if ((node->symbol == TOK_FUNCTION) || (node->symbol == TOK_PROTOTYPE))
 	{
 		// paranoia line
 		string temp = write_attr(node);
-		printf("%s (%zd.%zd.%zd) {%d} %s", (node->children[0]->children[0]->lexinfo)->c_str(), 
+		fprintf(symout, "%s (%zd.%zd.%zd) {%d} %s", (node->children[0]->children[0]->lexinfo)->c_str(), 
 					 node->children[0]->children[0]->lloc.filenr, node->children[0]->children[0]->lloc.linenr,
 					 node->children[0]->children[0]->lloc.offset, node->block_nr, temp.c_str());
-		printf("\n");
+		fprintf(symout, "\n");
 		for (auto child : node->children[1]->children)
 		{
 			int name = 0;
@@ -249,12 +251,12 @@ void write_symbol(astree *node)
 				name = 1;
 
 			string temp = write_attr(child->children[0]) + write_attr(child);
-			printf("   %s (%zd.%zd.%zd) {%d} %s", (child->children[name]->lexinfo)->c_str(), 
+			fprintf(symout, "   %s (%zd.%zd.%zd) {%d} %s", (child->children[name]->lexinfo)->c_str(), 
 						 child->children[name]->lloc.filenr, child->children[name]->lloc.linenr,
 						 child->children[name]->lloc.offset, child->block_nr, temp.c_str());
-			printf("\n");
+			fprintf(symout, "\n");
 		}
-		printf("\n");
+		fprintf(symout, "\n");
 	}
 	else if (node->symbol == TOK_VARDECL)
 	{
@@ -272,7 +274,7 @@ void write_symbol(astree *node)
 		if (node->block_nr != 0)
 			function_stack.push_back(string(buff));
 		else
-			printf("%s\n", buff);
+			fprintf(symout, "%s\n", buff);
 	}
 }
 
