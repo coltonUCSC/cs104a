@@ -15,6 +15,7 @@ int g_block_nr = 0;
 
 void dump_symbol_stack();
 void dump_symbol(symbol *sym);
+void dump_struct_stack();
 
 symbol::symbol(astree* node)
 {
@@ -356,8 +357,8 @@ void processNode(astree *node)
 				//symbol_stack.push_back(new symbol_table());
 			}
 			symbol *handle = lookup_symbol(a_node); 
-			if ((handle != NULL) && ((int)handle->block_nr == (int)node->block_nr)) //GET FUCKED
-				printf("trying to redeclare parameter.\n");
+			if ((handle != NULL) && ((int)handle->block_nr == (int)node->block_nr))
+				printf("ERROR: no such type\n");
 
 			// printf("TOK_VARDECL val: %s\n", (left->children[0]->lexinfo)->c_str()); //%%: DUMP_SYMBOL
 			symbol_stack.back()->insert(symbol_entry(const_cast<string*>(a_node->lexinfo), sym));
@@ -610,4 +611,18 @@ void dump_symbol(symbol *sym)
 	printf ("(%zd.%zd.%zd) {%d}\n",
             sym->filenr, sym->linenr, sym->offset,
             (int)sym->block_nr);
+}
+
+void dump_struct_stack()
+{
+	for (auto it = struct_table.begin(); it != struct_table.end(); ++it)
+	{
+		string *str = it->first;
+		symbol *s = it->second;
+		string attr_string = write_attr(s);
+		//cout << "str: " << *str << endl;
+		printf("    str*<const key>: %s attr: %s fsize: %zu", 
+			str->c_str(), attr_string.c_str(), s->fields->size());
+		dump_symbol(s);
+	}
 }
