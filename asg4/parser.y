@@ -161,12 +161,13 @@ allocator : TOK_NEW TOK_IDENT '(' ')'       { destroy($3, $4);
 call      : TOK_IDENT '(' ')'                { destroy($3); 
                                                $2->sym(TOK_CALL);
                                                $$ = $2->adopt($1); }
-          | TOK_IDENT rexpr ')'              { destroy($2); 
+          | callargs ')'                     { destroy($2); 
                                                $$ = $1; }
           ;
-rexpr     : rexpr ',' expr       { destroy($2); $$ = $1->adopt($3); }
-          | '(' expr             { $1->sym(TOK_CALL);
-                                   $$ = $1->adopt($2); }
+callargs  : callargs ',' expr     { destroy($2); 
+                                    $$ = $1->adopt($3);}
+          | TOK_IDENT '(' expr    { $2->sym(TOK_CALL);
+                                  $$ = $2->adopt($1, $3);}
           ;
 variable:   TOK_IDENT         { $$ = $1; }
           | expr '.' TOK_IDENT
