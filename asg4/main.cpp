@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     // A bunch of options that we dont actually use at the moment
     yy_flex_debug = 0;
     int option = 0;
-    int yydebug = 0;
+    yydebug = 0;
     int debug = 0;
     int cppopt = 0;
     string cpparg = "";

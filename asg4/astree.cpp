@@ -100,8 +100,11 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
 void astree::print_node()
 {
    string attrs = write_attr(this);
+   const char *tname = parser::get_yytname(this->symbol);
+   if(strstr (tname, "TOK_") == tname) tname +=4;
+   printf("%s\n", tname);
    printf("%s \"%s\" (%zd.%zd.%zd) {%d} %s\n",
-            parser::get_yytname (this->symbol)+4, this->lexinfo->c_str(),
+            tname, this->lexinfo->c_str(),
             this->lloc.filenr, this->lloc.linenr, this->lloc.offset,
             this->block_nr, attrs.c_str());
 }
@@ -166,10 +169,11 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    {
       fprintf (outfile, "|  ");
    }
-
+   const char *tname = parser::get_yytname(tree->symbol);
+   if(strstr (tname, "TOK_") == tname) tname +=4;
    string attrs = write_attr(tree);
    fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd) {%d} %s",
-            parser::get_yytname (tree->symbol)+4, tree->lexinfo->c_str(),
+            tname, tree->lexinfo->c_str(),
             tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset,
             tree->block_nr, attrs.c_str());
 

@@ -17,6 +17,7 @@ void dump_symbol(symbol *sym);
 
 symbol::symbol(astree* node)
 {
+	struct_name = node->struct_name;
 	filenr = node->lloc.filenr;
 	linenr = node->lloc.linenr;
 	offset = node->lloc.offset;
@@ -301,6 +302,23 @@ void processNode(astree *node)
 			}
 			break;
 		}
+		case TOK_STRINGCON:
+		{
+			node->attr[ATTR_string] = 1;
+			node->attr[ATTR_const] = 1;
+			break;
+		}
+		case TOK_INDEX:
+		{
+			node->attr[ATTR_vaddr] = 1;
+			node->attr[ATTR_lval] = 1;
+			break;
+		}
+		case TOK_NULL:
+		{
+			node->attr[ATTR_null] = 1;
+			node->attr[ATTR_const] = 1;
+		}
 		case TOK_STRING:
 		{
 			node->attr[ATTR_string] = 1;
@@ -371,7 +389,18 @@ void processNode(astree *node)
 		{
 			symbol *sym = lookup_symbol(node);
 			if (sym != NULL) // NOT ERROR
+			{
 				node->lloc_decl = location{sym->filenr, sym->linenr, sym->offset};
+				node->attr |= sym->attr;
+				node->struct_name = sym->struct_name;
+			}
+			sym = lookup_struct(node);
+			if (sym != NULL)
+			{ 
+				node->lloc_decl = location{sym->filenr, sym->linenr, sym->offset};
+				node->attr |= sym->attr;
+				node->struct_name = sym->struct_name;
+			}
 			break;
 		}
 		case TOK_PARAM:

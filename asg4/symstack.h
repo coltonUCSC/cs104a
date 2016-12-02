@@ -13,6 +13,7 @@ using symbol_entry = symbol_table::value_type;
 struct symbol {
 	attr_bitset attr;
 	symbol_table* fields;
+	string struct_name;
 	size_t filenr;
 	size_t linenr;
 	size_t offset;
